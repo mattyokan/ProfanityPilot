@@ -44,7 +44,7 @@ class BayesianClassifier(
      * from the neutral probability.
      */
     private fun mostInterestingTokens(tokens: Iterable<String>, count: Int) = tokens.map { it to it.spamProbability }
-        .sortedByDescending { (_, spamProb) -> abs(spamProb - NeutralProbability) }
+        .sortedByDescending { (_, spamProb) -> spamProb - NeutralProbability }
         .take(count)
 
     private fun combinedProbability(interestingTokens: List<Pair<String, Double>>): Double =
