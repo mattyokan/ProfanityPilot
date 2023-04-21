@@ -40,3 +40,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Ignore datasets folder since these shouldn't be uploaded to VCS anyways
+src/main/resources/training/
+
+.idea/
