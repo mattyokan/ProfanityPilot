@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "1.8.0"
     kotlin("plugin.serialization") version "1.8.0"
-    application
+    `java-library`
 }
 
 group = "me.yokan"
@@ -25,8 +25,4 @@ tasks.test {
 
 kotlin {
     jvmToolchain(8)
-}
-
-application {
-    mainClass.set("MainKt")
 }
