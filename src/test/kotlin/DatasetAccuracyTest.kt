@@ -4,16 +4,14 @@ import kotlinx.serialization.decodeFromByteArray
 import me.yokan.profanitypilot.classifier.bayes.BayesianClassifier
 import me.yokan.profanitypilot.model.BayesianClassifierData
 import me.yokan.profanitypilot.train.GenerateDataFromProfanityCheckDataset
-import kotlin.time.Duration.Companion.milliseconds
+import me.yokan.profanitypilot.train.TrainRandomForest
+import me.yokan.profanitypilot.train.TrainSVM
 
 
 private data class TestEntry(
     val message: String,
     val good: Boolean,
-    val computedScore: Double
-) {
-    fun computedGood(threshold: Double = BayesianClassifier.ProfanityThreshold) = computedScore <= threshold
-}
+)
 
 private data class EvaluationInfo(
     val precision: Double,
@@ -32,8 +30,7 @@ private data class EvaluationInfo(
  */
 fun main() {
     val file = object {}::class.java.getResourceAsStream("/trained_data.cbor")
-    val data = Cbor.decodeFromByteArray<BayesianClassifierData>(file.readBytes())
-    val model = BayesianClassifier(data)
+    val bayesData = Cbor.decodeFromByteArray<BayesianClassifierData>(file.readBytes())
 
 
     val trainingDataFile = GenerateDataFromProfanityCheckDataset::class.java.getResourceAsStream("/training/clean_data.csv")
@@ -44,80 +41,68 @@ fun main() {
             val isOffensive = info[0] == "1"
             val message = info[1]
 
-            TestEntry(message, !isOffensive, model.computeScore(message))
+            TestEntry(message, !isOffensive)
         }
 
-//    val regex = RegexFilterProvider()
-//
-//    val time = System.currentTimeMillis()
-//    val totalEvil = allMessages.count { regex.blocked(it.message) }
-//    val elapsed = ((System.currentTimeMillis()) - time).milliseconds
-//
-//    val timeBayes = System.currentTimeMillis()
-//    val totalEvilBayes = allMessages.count { model.computeScore(it.message) > BayesianClassifier.ProfanityThreshold }
-//    val elapsedBayes = (System.currentTimeMillis() - timeBayes).milliseconds
-//
-//    println("Regex took ${elapsed.inWholeMilliseconds} milliseconds to scan ${allMessages.size} messages to find $totalEvil bad messages")
-//    println("Bayes took ${elapsedBayes.inWholeMilliseconds} milliseconds to scan ${allMessages.size} messages to find $totalEvilBayes bad messages")
-
-    fun computeBayesianPrecisionRecall(threshold: Double): EvaluationInfo {
+    fun computeMetrics(isGood: (String) -> Boolean): EvaluationInfo {
         val truePositives = allMessages
-            .count { it.good && it.computedGood(threshold) }
+            .count { it.good && isGood(it.message) }
 
         val trueNegatives = allMessages
-            .count { !it.good && !it.computedGood(threshold) }
+            .count { !it.good && !isGood(it.message) }
 
         val falsePositives = allMessages
-            .count { it.good && !it.computedGood(threshold) }
+            .count { it.good && !isGood(it.message) }
 
         val falseNegatives = allMessages
-            .count { !it.good && it.computedGood(threshold) }
+            .count { !it.good && isGood(it.message) }
 
         val precision = truePositives.toDouble() / (truePositives + falsePositives)
         val recall = truePositives.toDouble() / (truePositives + falseNegatives)
-         val accuracy = (truePositives + trueNegatives).toDouble() / (truePositives + trueNegatives + falsePositives + falseNegatives)
+        val accuracy = (truePositives + trueNegatives).toDouble() / (truePositives + trueNegatives + falsePositives + falseNegatives)
 
         return EvaluationInfo(precision, recall, accuracy, truePositives, trueNegatives, falsePositives, falseNegatives)
     }
 
-    val regexFilter = RegexFilterProvider()
+    val models = mapOf(
+        "Naive Bayes" to BayesianClassifier(bayesData),
+//        "Linear SVM" to TrainSVM().generate()
+        "Random Forest" to TrainRandomForest().generate()
+    )
 
-    fun computeRegexPrecisionRecall(): Pair<Double, Double> {
-        fun good(msg: String) = !regexFilter.blocked(msg)
-
-        val truePositives = allMessages
-            .count { it.good && good(it.message) }
-
-        val trueNegatives = allMessages
-            .count { !it.good && !good(it.message) }
-
-        val falsePositives = allMessages
-            .count { it.good && !good(it.message) }
-
-        val falseNegatives = allMessages
-            .count { !it.good && good(it.message) }
-
-        val precision = truePositives.toDouble() / (truePositives + falsePositives)
-        val recall = truePositives.toDouble() / (truePositives + falseNegatives)
-
-        return precision to recall
+    val columns = models.flatMap { (name, _) ->
+        listOf(
+            "$name Precision",
+            "$name Recall",
+            "$name Accuracy",
+        )
     }
+        .joinToString("\t")
 
-//    println("Starting regex precision recall")
-//    val time = System.currentTimeMillis()
-//    val (regexPrecision, regexRecall) = computeRegexPrecisionRecall()
-//    val regexElapsed = (System.currentTimeMillis() - time).milliseconds
-//    println("Regex precision recall finished")
+    val thresholds = listOf(
+        0.25,
+        0.4,
+        0.5,
+        0.75,
+    )
 
-    println("Threshold\tPrecision\tRecall\tAccuracy")
-    for (i in (0..100 step 1)) {
-        val threshold = i / 100.0
-        val time = System.currentTimeMillis()
-        val metrics = computeBayesianPrecisionRecall(threshold)
-        val elapsed = (System.currentTimeMillis() - time).milliseconds
-
-        println("$threshold\t${metrics.precision}\t${metrics.recall}\t${metrics.accuracy}")
+    println(columns)
+    thresholds.forEach { threshold ->
+        models.flatMap { (name, model) ->
+            val classifier = { input: String -> model.computeScore(input) >= threshold }
+            computeMetrics(classifier)
+                .let {
+                    listOf(
+                        it.precision,
+                        it.recall,
+                        it.accuracy
+                    )
+                }
+        }
+            .joinToString("\t")
+            .let { info ->
+                println("$threshold\t$info")
+            }
     }
-
 
 }
