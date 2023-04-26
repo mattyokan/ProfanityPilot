@@ -1,10 +1,6 @@
 package me.yokan.profanitypilot.model
 
-import opennlp.tools.tokenize.Tokenizer
-
 interface Classifier {
-
-    val tokenizer: Tokenizer
 
     /**
      * Compute the likelihood of the message provided

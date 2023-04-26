@@ -4,8 +4,11 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import me.yokan.profanitypilot.classifier.bayes.BayesianClassifier
+import me.yokan.profanitypilot.classifier.randomforest.RandomForestFactory
 import me.yokan.profanitypilot.model.BayesianClassifierData
 import me.yokan.profanitypilot.train.GenerateDataFromProfanityCheckDataset
+import me.yokan.profanitypilot.train.TrainRandomForest
+import me.yokan.profanitypilot.train.TrainSVM
 import java.io.File
 import java.util.Scanner
 
@@ -24,15 +27,21 @@ fun train() {
 fun test() {
     val file = object {}::class.java.getResourceAsStream("/trained_data.cbor")
     val data = Cbor.decodeFromByteArray<BayesianClassifierData>(file.readBytes())
-    val model = BayesianClassifier(data)
+    val models = mapOf(
+        "Naive Bayes" to BayesianClassifier(data),
+        "Linear SVM" to TrainSVM().generate()
+//        "Random Forest" to TrainRandomForest().generate()
+    )
 
     val scanner = Scanner(System.`in`)
 
     println("Enter in sentence to compute profanity score for:")
     while(scanner.hasNextLine()) {
         val line = scanner.nextLine()
-        val score = model.computeScore(line)
         println("Line: $line")
-        println("Profanity Score: $score")
+        models.mapValues { (_, model) -> model.computeScore(line) }
+            .forEach { (name, score) ->
+                println("$name: $score")
+            }
     }
 }

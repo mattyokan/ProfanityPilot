@@ -16,7 +16,7 @@ class BayesianClassifier(
     private val data: BayesianClassifierData
 ) : Classifier {
 
-    override val tokenizer: Tokenizer = SimpleTokenizer.INSTANCE
+    val tokenizer: Tokenizer = SimpleTokenizer.INSTANCE
 
     companion object {
         // Words that only appear in good/bad (not both) are considered to be almost certainly good or bad.
