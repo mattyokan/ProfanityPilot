@@ -5,7 +5,7 @@ import kotlin.math.min
 
 class BayesianDataGenerator {
 
-    fun generateDataFromCounts(goodCounts: Map<String, Int>, badCounts: Map<String, Int>) =
+    fun generateDataFromCounts(goodCounts: Map<String, Int>, badCounts: Map<String, Int>): BayesianClassifierData =
         (goodCounts.values.sum() to badCounts.values.sum())
             .let { (totalGood, totalBad) ->
                 println("Have $totalGood good words and $totalBad words")
