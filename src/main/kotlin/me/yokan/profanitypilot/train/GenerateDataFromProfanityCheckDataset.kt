@@ -5,6 +5,8 @@ import me.yokan.profanitypilot.classifier.bayes.BayesianClassifier
 import me.yokan.profanitypilot.classifier.bayes.BayesianDataGenerator
 import me.yokan.profanitypilot.model.BayesianClassifierData
 import opennlp.tools.tokenize.SimpleTokenizer
+import smile.nlp.dictionary.EnglishStopWords
+import smile.nlp.stemmer.LancasterStemmer
 
 class GenerateDataFromProfanityCheckDataset {
 
@@ -14,7 +16,18 @@ class GenerateDataFromProfanityCheckDataset {
     )
 
     fun generate() : BayesianClassifierData {
-        val tokenizer = SimpleTokenizer.INSTANCE
+        val tokenizer = smile.nlp.tokenizer.SimpleTokenizer()
+        val stemmer = LancasterStemmer()
+        val stopWords = EnglishStopWords.COMPREHENSIVE
+
+        val tokenizerFunction = { msg: String ->
+            tokenizer.split(msg)
+                .asSequence()
+                .map { it.lowercase() }
+                .filterNot { it in stopWords }
+                .map { stemmer.stem(it) }
+                .toList()
+        }
 
         val dataFile = GenerateDataFromProfanityCheckDataset::class.java.getResourceAsStream("/training/clean_data.csv")
         val data = csvReader().readAll(dataFile)
@@ -23,7 +36,7 @@ class GenerateDataFromProfanityCheckDataset {
             .map { info ->
                 val isOffensive = info[0] == "1"
                 val message = info[1]
-                Tokenized(!isOffensive, tokenizer.tokenize(message).toList())
+                Tokenized(!isOffensive, tokenizerFunction(message))
             }
 
         val info = allTokenized.groupBy { it.good }

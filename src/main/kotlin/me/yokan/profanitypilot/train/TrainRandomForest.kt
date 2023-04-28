@@ -14,7 +14,7 @@ class TrainRandomForest {
         var allMessages = data
             .drop(1)
             .map { info ->
-                val isOffensive = info[0] == "1"
+                val isOffensive = !(info[0] == "1")
                 val message = info[1]
                 RandomForestFactory.Message(message, isOffensive)
             }

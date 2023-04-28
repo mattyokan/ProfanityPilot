@@ -4,16 +4,14 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import me.yokan.profanitypilot.classifier.bayes.BayesianClassifier
-import me.yokan.profanitypilot.classifier.randomforest.RandomForestFactory
 import me.yokan.profanitypilot.model.BayesianClassifierData
 import me.yokan.profanitypilot.train.GenerateDataFromProfanityCheckDataset
-import me.yokan.profanitypilot.train.TrainRandomForest
 import me.yokan.profanitypilot.train.TrainSVM
 import java.io.File
 import java.util.Scanner
 
 fun main(args: Array<String>) {
-    test()
+    train()
 }
 
 fun train() {

@@ -5,7 +5,6 @@ import me.yokan.profanitypilot.classifier.bayes.BayesianClassifier
 import me.yokan.profanitypilot.model.BayesianClassifierData
 import me.yokan.profanitypilot.train.GenerateDataFromProfanityCheckDataset
 import me.yokan.profanitypilot.train.TrainRandomForest
-import me.yokan.profanitypilot.train.TrainSVM
 
 
 private data class TestEntry(
