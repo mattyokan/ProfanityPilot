@@ -41,7 +41,7 @@ fun main() {
         .drop(1)
         .map { info ->
             val content = info[1]
-            val safe = info[2] == "NOT"
+            val safe = !(info[3] == "PRFN")
             TestEntry(content, safe)
         }
 

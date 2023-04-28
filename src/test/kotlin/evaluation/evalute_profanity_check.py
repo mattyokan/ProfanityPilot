@@ -24,7 +24,7 @@ for threshold in thresholds:
     start = datetime.now()
     for idx, row in contents.iterrows():
         content = row["text"]
-        good = row["task_1"] == "NOT"
+        good = row["task_2"] == "PRFN"
         results.append({
             "content": content,
             "good": good,
