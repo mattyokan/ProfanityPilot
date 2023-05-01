@@ -4,8 +4,7 @@ A simple Naive Bayes classifier solution to profanity detection.
 
 # License
 
-This project is currently all rights reserved, Copyright 2023 Matt Yokanovich. I may decide to relicense this software
-under a permissive open-source license at some point in the future.
+This project is now available under the permissive MIT license. I am testing it with a few real online communities and may continue to make changes in the near future, but this was a project for an Artificial Intelligence course I took, so it's for the most part "unmaintained". Feel free to open issues or suggest PRs as necessary, just please recognize that my free time to review and adopt changes is limited as I work full-time.
 
 # Motivation
 
